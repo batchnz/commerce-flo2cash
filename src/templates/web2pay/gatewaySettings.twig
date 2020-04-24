@@ -1,0 +1,73 @@
+{% from '_includes/forms' import textField, lightswitchField, selectField, autosuggestField, colorField, field %}
+
+{{ autosuggestField({
+    label: 'Account ID'|t('commerce'),
+    placeholder: 'Flo2Cash issued Account ID',
+    id: 'accountId',
+    class: 'ltr',
+    name: 'accountId',
+    suggestEnvVars: true,
+    required: true,
+    value: gateway.accountId,
+    errors: gateway.getErrors('accountId')
+}) }}
+
+{{ selectField({
+    label: 'Preferred Payment Method'|t('commerce'),
+    instructions: 'Sets the preferred payment method, skipping the payment method selection page',
+    name: 'paymentMethod',
+    options: {
+        '': 'None',
+        'standard': 'Visa/MasterCard',
+        'unionpay': 'UnionPay',
+        'masterpass': 'Masterpass'
+    },
+    value: gateway.paymentMethod,
+    errors: gateway.getErrors('paymentMethod')
+}) }}
+
+{{ field({
+  label: 'Header Image',
+  instructions: 'Sets the image at the top of the payment page',
+}, include('_includes/forms/elementSelect', headerImageSelectConfig)) }}
+
+{{ colorField({
+    label: 'Bottom Border Color',
+    id: 'headerBottomBorder',
+    name: 'headerBottomBorder',
+    instructions: 'Sets the colour of the border underneath the header',
+    value: gateway.headerBottomBorder,
+    errors: gateway.getErrors('headerBottomBorder')
+}) }}
+
+{{ colorField({
+    label: 'Background Color',
+    id: 'headerBackgroundColour',
+    name: 'headerBackgroundColour',
+    instructions: 'Sets the background colour of the header section',
+    value: gateway.headerBackgroundColour,
+    errors: gateway.getErrors('headerBackgroundColour')
+}) }}
+
+{{ lightswitchField({
+    label: 'Should Web Payments display an option for storing card details upon successful payment?'|t('commerce'),
+    id: 'storeCard',
+    name: 'storeCard',
+    on: gateway.storeCard,
+    errors: gateway.getErrors('storeCard'),
+}) }}
+
+{{ lightswitchField({
+    label: 'Should Web Payments display the customer email receipt field?'|t('commerce'),
+    id: 'displayCustomerEmail',
+    name: 'displayCustomerEmail',
+    on: gateway.displayCustomerEmail,
+    errors: gateway.getErrors('displayCustomerEmail'),
+}) }}
+
+{{ lightswitchField({
+    label: 'Test mode?'|t('commerce'),
+    name: 'testMode',
+    on: gateway.testMode,
+    errors: gateway.getErrors('testMode'),
+}) }}

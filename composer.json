@@ -1,0 +1,52 @@
+{
+  "name": "batchnz/commerce-flo2cash",
+  "description": "Flo2Cash integration for Craft Commerce 2 & 3",
+  "version": "1.0.0",
+  "type": "craft-plugin",
+  "keywords": [
+    "flo2cash",
+    "commerce",
+    "craftcms",
+    "omnipay",
+    "yii2"
+  ],
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Josh Smith",
+      "email": "josh@batch.nz"
+    },
+    {
+      "name": "Batch",
+      "homepage": "https://www.batch.nz/"
+    }
+  ],
+  "support": {
+    "email": "support@craftcms.com",
+    "issues": "https://github.com/batchnz/commerce-flo2cash/issues?state=open",
+    "source": "https://github.com/batchnz/commerce-flo2cash",
+    "docs": "https://github.com/batchnz/commerce-flo2cash",
+    "rss": "https://github.com/batchnz/commerce-flo2cash/commits/master.atom"
+  },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../omnipay-flo2cash"
+    }
+  ],
+  "require": {
+    "craftcms/cms": "^3.1.5",
+    "craftcms/commerce": "^2.0|^3.0",
+    "craftcms/commerce-omnipay": "^2.0.0",
+    "batchnz/omnipay-flo2cash": "^1.0.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "batchnz\\flo2cash\\": "src/"
+    }
+  },
+  "extra": {
+    "name": "Flo2Cash for Craft Commerce",
+    "handle": "commerce-flo2cash"
+  }
+}
