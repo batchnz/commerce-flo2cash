@@ -28,12 +28,6 @@
     "docs": "https://github.com/batchnz/commerce-flo2cash",
     "rss": "https://github.com/batchnz/commerce-flo2cash/commits/master.atom"
   },
-  "repositories": [
-    {
-      "type": "path",
-      "url": "../omnipay-flo2cash"
-    }
-  ],
   "require": {
     "craftcms/cms": "^3.1.5",
     "craftcms/commerce": "^2.0|^3.0",
