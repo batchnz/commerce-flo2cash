@@ -7,11 +7,11 @@ use craft\commerce\base\RequestResponseInterface;
 use craft\commerce\errors\PaymentException;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\Transaction;
-use batchnz\flo2cash\PayPalExpressBundle;
 use craft\commerce\omnipay\base\OffsiteGateway;
 use craft\web\View;
 use Omnipay\Common\AbstractGateway;
 use Omnipay\Omnipay;
+use Omnipay\Flo2Cash\Web2PayGateway as Gateway;
 
 /**
  * Web2Pay represents the Hosted Payment Pages
@@ -25,13 +25,6 @@ class Flo2CashWeb2Pay extends OffsiteGateway
     // =========================================================================
 
     /**
-     * Defines the Web Payments integration service. Always use “_xclick” for Web Payments Standard Payment.
-     * Required
-     * @var string
-     */
-    public $cmd = '_xclick';
-
-    /**
      * Flo2Cash issued Account ID
      * Required
      * @var int
@@ -39,50 +32,28 @@ class Flo2CashWeb2Pay extends OffsiteGateway
     public $accountId;
 
     /**
-     * The transaction amount in NZ dollars. Must be a positive value.
-     * Required
-     * @var float
-     */
-    // public $amount;
-
-    /**
-     * Description of item, not stored by Flo2Cash.
-     * Required
+     * Flo2Cash issued secret key
+     * Your secret hash key is used to provide tamper proof message transfer between you and the Flo2Cash Web Payments application
      * @var string
      */
-    // public $item_name;
+    public $secretKey;
 
     /**
-     * Merchant defined value stored with the transaction.
-     * Optional
-     * 50 characters max
+     * Flo2Cash return option
+     * The return option manages how your online payment page works once a customer makes a payment.
+     * We recommend you use our default option 'Display in Web Payments' where your online the payment result is set to display within the payment and provides your customer with a link to go back to your site.
+     * If you select 'Post to Return URL' then Web Payments will redirect the user to your site along with the transaction result data. If you select this option please make sure your Return URL is hosted under a valid SSL.
+     * Must be one of "displayInWebPayments" or "returnToUrl"
      * @var string
      */
-    // public $reference;
+    public $returnOption;
 
     /**
-     * Merchant defined value stored with the transaction.
-     * Optional
-     * 50 characters max
-     * @var string
+     * The Merchant Notification Service (MNS) provides details of a processed transaction so that merchants can update their own system saccordingly.
+     * It utilises a handshake verification procedure to avoid the spoofing aspect that could occur if using the fields posted back to the “return_url”.
+     * @var boolean
      */
-    // public $particular;
-
-    /**
-     * The URL that the customer will be sent to on completion of the payment. This must be a publicly accessible URL.
-     * Required
-     * 1024 characters max
-     * @var string
-     */
-    // public $return_url;
-
-    /**
-     * If provided, this URL will be used in conjunction with Flo2Cashs Merchant Notification Service (MNS). (See MNSfor details) This must be a publicly accessible URL.
-     * Optional
-     * 1024 characters max
-     * @var string
-     */
-    // public $notification_url;
+    // public $useMerchantNotificationService;
 
     /**
      * The URL to an image. Sets the image at the top of the payment page. The image can be of any height but must be a maximum of 600px wide and must be URLencoded.
@@ -111,16 +82,6 @@ class Flo2CashWeb2Pay extends OffsiteGateway
      * @var string
      */
     public $headerBackgroundColour;
-
-    /**
-     * Merchant defined value that you can use to identify your transaction.
-     * Any value passed in will be posted back to the notification_url (See MNS).
-     * This is a pass-throughfield that is never presented to your customer. Flo2Cash will not store this value.
-     * Optional
-     * 1024 characters max
-     * @var string
-     */
-    // public $custom_data;
 
     /**
      * 0 or 1 as to whether Web Payments should display the option for storing the card details upon a successful payment. 0 = do not show (default) 1 = show
@@ -153,19 +114,6 @@ class Flo2CashWeb2Pay extends OffsiteGateway
      */
     public $paymentMethod;
 
-    /**
-     * This is a SHA1 hash of the data that you are passing plus your secret hash key (explained above).
-     * Please see the appendix (Flo2Cash Calculating the merchant_verifier input parameter value for Standard Payments) for sample code on how to calculate this field.
-     * Required
-     * @var string
-     */
-    // public $merchant_verifier;
-
-    /**
-     * @var string
-     */
-    public $testMode;
-
     // Public Methods
     // =========================================================================
 
@@ -174,7 +122,7 @@ class Flo2CashWeb2Pay extends OffsiteGateway
      */
     public static function displayName(): string
     {
-        return Craft::t('commerce', 'Flo2Cash Web2Pay');
+        return Craft::t('commerce', 'Flo2Cash Web Payments');
     }
 
     /**
@@ -182,14 +130,31 @@ class Flo2CashWeb2Pay extends OffsiteGateway
      */
     public function getSettingsHtml()
     {
+        $settings = $this->getSettings();
+        $headerImage = $settings['headerImage'];
+        $headerImageElement = null;
+
+        if( !empty($headerImage) && count($headerImage) > 0 ){
+            $headerImageElement = [Craft::$app->getElements()->getElementById($headerImage[0])];
+        }
+
         return Craft::$app->getView()->renderTemplate('commerce-flo2cash/web2pay/gatewaySettings', [
             'gateway' => $this,
+            'returnOptions' => [
+                Gateway::RETURN_OPTION_RETURN_TO_URL => 'Return to URL',
+                Gateway::RETURN_OPTION_DISPLAY_IN_WEBPAYMENTS => 'Display in Web Payments'
+            ],
+            'paymentMethods' => [
+                Gateway::PAYMENT_METHOD_STANDARD => 'Visa/MasterCard',
+                Gateway::PAYMENT_METHOD_UNIONPAY => 'UnionPay',
+                Gateway::PAYMENT_METHOD_MASTERPASS => 'Masterpass'
+            ],
             'headerImageSelectConfig' => [
                 'id'                => 'headerImage',
                 'name'              => 'headerImage',
                 'jsClass'           => 'Craft.AssetSelectInput',
                 'elementType'       => 'craft\\elements\\Asset',
-                'elements'          => $this->getSettings()['headerImage'] && count($this->getSettings()['headerImage']) ? [Craft::$app->getElements()->getElementById($this->getSettings()['headerImage'][0])] : null,
+                'elements'          => $headerImageElement,
                 'criteria'          => ['kind' => ['image'], 'width' => '<= 600', 'enabledForSite' => true],
                 'limit'             => 1,
                 'viewMode'          => 'large',
@@ -203,7 +168,32 @@ class Flo2CashWeb2Pay extends OffsiteGateway
      */
     public function populateRequest(array &$request, BasePaymentForm $paymentForm = null)
     {
-        echo '<pre> "populatingRequest": '; print_r("populatingRequest"); echo '</pre>'; die();
+        $craftRequest = Craft::$app->getRequest();
+
+        // Populate parameters that come back from Flo2Cash via POST
+        if( $craftRequest->getIsPost() ){
+            foreach ($craftRequest->getBodyParams() as $key => $value) {
+                $request[$key] = $value;
+            }
+        } else {
+            $this->gateway()->setReference($request['transactionReference']);
+            $this->gateway()->setParticular($request['transactionId']);
+        }
+    }
+
+    /**
+     * Restricts the fields outputted when using toArray()
+     * @author Josh Smith <josh@batch.nz>
+     * @return array
+     */
+    public function fields()
+    {
+        return [
+            'id',
+            'name',
+            'handle',
+            'sortOrder'
+        ];
     }
 
     // Protected Methods
@@ -214,19 +204,23 @@ class Flo2CashWeb2Pay extends OffsiteGateway
      */
     protected function createGateway(): AbstractGateway
     {
+        // Extract the header image URL
+        $headerImageUrl = '';
+        if( is_array($this->headerImage) && count($this->headerImage) > 0 ) {
+            $headerImage = Craft::$app->getElements()->getElementById($this->headerImage[0]);
+            $headerImageUrl = empty($headerImage) ? '' : $headerImage->getUrl();
+        }
+
         /** @var Gateway $gateway */
         $gateway = static::createOmnipayGateway($this->getGatewayClassName());
-
-        $gateway->setUsername(Craft::parseEnv($this->username));
-        $gateway->setPassword(Craft::parseEnv($this->password));
-        $gateway->setSignature(Craft::parseEnv($this->signature));
-        $gateway->setTestMode($this->testMode);
-        $gateway->setSolutionType($this->solutionType);
-        $gateway->setLandingPage($this->landingPage);
-        $gateway->setBrandName($this->brandName);
-        $gateway->setHeaderImageUrl($this->headerImageUrl);
-        $gateway->setLogoImageUrl($this->logoImageUrl);
-        $gateway->setBorderColor($this->borderColor);
+        $gateway->setAccountId(Craft::parseEnv($this->accountId));
+        $gateway->setHeaderImage($headerImageUrl);
+        $gateway->setHeaderBottomBorder($this->headerBottomBorder);
+        $gateway->setHeaderBackgroundColour($this->headerBackgroundColour);
+        $gateway->setStoreCard($this->storeCard);
+        $gateway->setDisplayCustomerEmail($this->displayCustomerEmail);
+        $gateway->setSecretKey($this->secretKey);
+        $gateway->setReturnOption($this->returnOption);
 
         return $gateway;
     }

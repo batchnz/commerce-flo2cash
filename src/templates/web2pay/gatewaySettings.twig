@@ -2,7 +2,7 @@
 
 {{ autosuggestField({
     label: 'Account ID'|t('commerce'),
-    placeholder: 'Flo2Cash issued Account ID',
+    instructions: 'Flo2Cash issued Account ID',
     id: 'accountId',
     class: 'ltr',
     name: 'accountId',
@@ -12,19 +12,18 @@
     errors: gateway.getErrors('accountId')
 }) }}
 
-{{ selectField({
-    label: 'Preferred Payment Method'|t('commerce'),
-    instructions: 'Sets the preferred payment method, skipping the payment method selection page',
-    name: 'paymentMethod',
-    options: {
-        '': 'None',
-        'standard': 'Visa/MasterCard',
-        'unionpay': 'UnionPay',
-        'masterpass': 'Masterpass'
-    },
-    value: gateway.paymentMethod,
-    errors: gateway.getErrors('paymentMethod')
+{{ autosuggestField({
+    label: 'Secret Key'|t('commerce'),
+    instructions: 'Secret hash key used to provide tamper proof message transfer between you and the Flo2Cash Web Payments application',
+    id: 'secretKey',
+    class: 'ltr',
+    name: 'secretKey',
+    suggestEnvVars: true,
+    required: true,
+    value: gateway.secretKey,
+    errors: gateway.getErrors('secretKey')
 }) }}
+
 
 {{ field({
   label: 'Header Image',
@@ -48,6 +47,32 @@
     value: gateway.headerBackgroundColour,
     errors: gateway.getErrors('headerBackgroundColour')
 }) }}
+
+{{ selectField({
+    label: 'Preferred Payment Method'|t('commerce'),
+    instructions: 'Sets the preferred payment method, skipping the payment method selection page',
+    name: 'paymentMethod',
+    options: paymentMethods,
+    value: gateway.paymentMethod,
+    errors: gateway.getErrors('paymentMethod')
+}) }}
+
+{{ selectField({
+    label: 'Return Option'|t('commerce'),
+    instructions: 'This must match the return option in your <a href="https://secure.flo2cash.co.nz/client/PricingChannel/WebPaymentsIntegrationEdit.aspx">Flo2Cash integration settings</a>.',
+    name: 'returnOption',
+    options: returnOptions,
+    value: gateway.returnOption,
+    errors: gateway.getErrors('returnOption')
+}) }}
+
+{# {{ lightswitchField({
+    label: 'Use the Merchant Notification Service? '|t('commerce'),
+    id: 'useMerchantNotificationService',
+    name: 'useMerchantNotificationService',
+    on: gateway.useMerchantNotificationService,
+    errors: gateway.getErrors('useMerchantNotificationService'),
+}) }} #}
 
 {{ lightswitchField({
     label: 'Should Web Payments display an option for storing card details upon successful payment?'|t('commerce'),
