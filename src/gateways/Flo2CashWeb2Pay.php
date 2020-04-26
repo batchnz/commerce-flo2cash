@@ -141,8 +141,8 @@ class Flo2CashWeb2Pay extends OffsiteGateway
         return Craft::$app->getView()->renderTemplate('commerce-flo2cash/web2pay/gatewaySettings', [
             'gateway' => $this,
             'returnOptions' => [
-                Gateway::RETURN_OPTION_RETURN_TO_URL => 'Return to URL',
-                Gateway::RETURN_OPTION_DISPLAY_IN_WEBPAYMENTS => 'Display in Web Payments'
+                Gateway::RETURN_OPTION_DISPLAY_IN_WEBPAYMENTS => 'Display in Web Payments',
+                Gateway::RETURN_OPTION_RETURN_TO_URL => 'Return to URL'
             ],
             'paymentMethods' => [
                 Gateway::PAYMENT_METHOD_STANDARD => 'Visa/MasterCard',
@@ -170,14 +170,14 @@ class Flo2CashWeb2Pay extends OffsiteGateway
     {
         $craftRequest = Craft::$app->getRequest();
 
+        $this->gateway()->setParticular($request['transactionId']);
+        $this->gateway()->setReference($request['transactionReference']);
+
         // Populate parameters that come back from Flo2Cash via POST
-        if( $craftRequest->getIsPost() ){
+        if( $craftRequest->getIsPost() && ($craftRequest->getOrigin() !== $craftRequest->getHostInfo()) ){
             foreach ($craftRequest->getBodyParams() as $key => $value) {
                 $request[$key] = $value;
             }
-        } else {
-            $this->gateway()->setReference($request['transactionReference']);
-            $this->gateway()->setParticular($request['transactionId']);
         }
     }
 
@@ -220,6 +220,7 @@ class Flo2CashWeb2Pay extends OffsiteGateway
         $gateway->setStoreCard($this->storeCard);
         $gateway->setDisplayCustomerEmail($this->displayCustomerEmail);
         $gateway->setSecretKey($this->secretKey);
+        $gateway->setPaymentMethod($this->paymentMethod);
         $gateway->setReturnOption($this->returnOption);
 
         return $gateway;
