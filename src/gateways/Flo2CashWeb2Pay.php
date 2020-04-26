@@ -8,9 +8,11 @@ use craft\commerce\errors\PaymentException;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\Transaction;
 use craft\commerce\omnipay\base\OffsiteGateway;
+use craft\commerce\elements\Order;
 use craft\web\View;
 use Omnipay\Common\AbstractGateway;
 use Omnipay\Omnipay;
+use Omnipay\Flo2Cash\Flo2CashItemBag;
 use Omnipay\Flo2Cash\Web2PayGateway as Gateway;
 
 /**
@@ -113,6 +115,20 @@ class Flo2CashWeb2Pay extends OffsiteGateway
      * @var string
      */
     public $paymentMethod;
+
+    /**
+     * Whether to send cart info
+     * @var boolean
+     */
+    public $sendCartInfo;
+
+    /**
+     * Passing this variable (value must be “1”) will allow you to collect customer information from the Flo2Cash Web Payments shopping cart page.
+     * The customer information will then be posted back to your notification URL
+     * Optional
+     * @var int
+     */
+    public $customerInfoRequired;
 
     // Public Methods
     // =========================================================================
@@ -222,6 +238,8 @@ class Flo2CashWeb2Pay extends OffsiteGateway
         $gateway->setSecretKey($this->secretKey);
         $gateway->setPaymentMethod($this->paymentMethod);
         $gateway->setReturnOption($this->returnOption);
+        $gateway->setUseShoppingCart($this->sendCartInfo);
+        $gateway->setCustomerInfoRequired($this->customerInfoRequired);
 
         return $gateway;
     }
@@ -232,6 +250,33 @@ class Flo2CashWeb2Pay extends OffsiteGateway
     protected function getGatewayClassName()
     {
         return '\\'.Gateway::class;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    protected function getItemBagClassName(): string
+    {
+        return Flo2CashItemBag::class;
+    }
+
+    /**
+     * Override the parent method to set code as the description for Flo2Cash
+     * @author Josh Smith <josh@batch.nz>
+     * @param  Order  $order
+     * @return array
+     */
+    protected function getItemListForOrder(Order $order): array
+    {
+        $items = parent::getItemListForOrder($order);
+
+        // Assign the SKU as the code
+        foreach ($order->getLineItems() as $i => $item) {
+            $purchasable = $item->getPurchasable();
+            $items[$i]['code'] = $purchasable->getSku();
+        }
+
+        return $items;
     }
 
     // Private Methods

@@ -75,6 +75,22 @@
 }) }} #}
 
 {{ lightswitchField({
+    label: 'Should commerce send cart information to gateway when making transactions?'|t('commerce'),
+    id: 'sendCartInfo',
+    name: 'sendCartInfo',
+    on: gateway.sendCartInfo,
+    errors: gateway.getErrors('sendCartInfo'),
+}) }}
+
+{{ lightswitchField({
+    label: 'Should Web Payments collect customer information? (cart information must be sent for this to work)'|t('commerce'),
+    id: 'customerInfoRequired',
+    name: 'customerInfoRequired',
+    on: gateway.customerInfoRequired,
+    errors: gateway.getErrors('customerInfoRequired'),
+}) }}
+
+{{ lightswitchField({
     label: 'Should Web Payments display an option for storing card details upon successful payment?'|t('commerce'),
     id: 'storeCard',
     name: 'storeCard',
