@@ -1,7 +1,7 @@
 {
   "name": "batchnz/commerce-flo2cash",
   "description": "Flo2Cash integration for Craft Commerce 2 & 3",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "craft-plugin",
   "keywords": [
     "flo2cash",
