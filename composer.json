@@ -1,7 +1,7 @@
 {
   "name": "batchnz/commerce-flo2cash",
   "description": "Flo2Cash integration for Craft Commerce 2 & 3",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "type": "craft-plugin",
   "keywords": [
     "flo2cash",
@@ -32,7 +32,7 @@
     "craftcms/cms": "^3.1.5",
     "craftcms/commerce": "^2.0|^3.0",
     "craftcms/commerce-omnipay": "^2.0.0",
-    "batchnz/omnipay-flo2cash": "^1.1.0"
+    "batchnz/omnipay-flo2cash": "^1.1.1"
   },
   "autoload": {
     "psr-4": {

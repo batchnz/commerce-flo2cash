@@ -167,6 +167,7 @@ class Flo2CashWeb2Pay extends OffsiteGateway
                 Gateway::RETURN_OPTION_RETURN_TO_URL => 'Return to URL'
             ],
             'paymentMethods' => [
+                '' => 'All',
                 Gateway::PAYMENT_METHOD_STANDARD => 'Visa/MasterCard',
                 Gateway::PAYMENT_METHOD_UNIONPAY => 'UnionPay',
                 Gateway::PAYMENT_METHOD_MASTERPASS => 'Masterpass'
