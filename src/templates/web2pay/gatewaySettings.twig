@@ -105,3 +105,11 @@
     on: gateway.displayCustomerEmail,
     errors: gateway.getErrors('displayCustomerEmail'),
 }) }}
+
+{{ lightswitchField({
+    label: 'Enable test mode?'|t('commerce'),
+    id: 'testMode',
+    name: 'testMode',
+    on: gateway.testMode,
+    errors: gateway.getErrors('testMode'),
+}) }}

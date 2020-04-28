@@ -130,6 +130,12 @@ class Flo2CashWeb2Pay extends OffsiteGateway
      */
     public $customerInfoRequired;
 
+    /**
+     * Whether to use the integration in test mode
+     * @var boolean
+     */
+    public $testMode = false;
+
     // Public Methods
     // =========================================================================
 
@@ -235,11 +241,12 @@ class Flo2CashWeb2Pay extends OffsiteGateway
         $gateway->setHeaderBackgroundColour($this->headerBackgroundColour);
         $gateway->setStoreCard($this->storeCard);
         $gateway->setDisplayCustomerEmail($this->displayCustomerEmail);
-        $gateway->setSecretKey($this->secretKey);
+        $gateway->setSecretKey(Craft::parseEnv($this->secretKey));
         $gateway->setPaymentMethod($this->paymentMethod);
         $gateway->setReturnOption($this->returnOption);
         $gateway->setUseShoppingCart($this->sendCartInfo);
         $gateway->setCustomerInfoRequired($this->customerInfoRequired);
+        $gateway->setTestMode($this->testMode);
 
         return $gateway;
     }
