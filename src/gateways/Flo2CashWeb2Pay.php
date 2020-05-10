@@ -3,15 +3,13 @@
 namespace batchnz\flo2cash\gateways;
 
 use Craft;
-use craft\commerce\base\RequestResponseInterface;
-use craft\commerce\errors\PaymentException;
 use craft\commerce\models\payments\BasePaymentForm;
 use craft\commerce\models\Transaction;
 use craft\commerce\omnipay\base\OffsiteGateway;
 use craft\commerce\elements\Order;
-use craft\web\View;
+use batchnz\flo2cash\events\SetTransactionParticular;
+use batchnz\flo2cash\events\SetTransactionReference;
 use Omnipay\Common\AbstractGateway;
-use Omnipay\Omnipay;
 use Omnipay\Flo2Cash\Flo2CashItemBag;
 use Omnipay\Flo2Cash\Web2PayGateway as Gateway;
 
@@ -23,6 +21,40 @@ use Omnipay\Flo2Cash\Web2PayGateway as Gateway;
  */
 class Flo2CashWeb2Pay extends OffsiteGateway
 {
+     // Constants
+    // =========================================================================
+    /**
+     * @event SetTransactionParticular
+     *
+     * ```php
+     * use batchnz\flo2cash\events\SetTransactionParticular;
+     * use batchnz\flo2cash\gateways\Flo2CashWeb2Pay;
+     * use yii\base\Event;
+     *
+     * Event::on(Flo2CashWeb2Pay::class, Flo2CashWeb2Pay::EVENT_SET_TRANSACTION_PARTICULAR, function(SetTransactionParticular $e) {
+     *     // Update transaction particular
+     *     $e->particular = 'myParticular';
+     * });
+     * ```
+     */
+    const EVENT_SET_TRANSACTION_PARTICULAR = 'setTransactionParticular';
+
+    /**
+     * @event SetTransactionReference
+     *
+     * ```php
+     * use batchnz\flo2cash\events\SetTransactionReference;
+     * use batchnz\flo2cash\gateways\Flo2CashWeb2Pay;
+     * use yii\base\Event;
+     *
+     * Event::on(Flo2CashWeb2Pay::class, Flo2CashWeb2Pay::EVENT_SET_TRANSACTION_REFERENCE, function(SetTransactionReference $e) {
+     *     // Update transaction particular
+     *     $e->particular = 'myParticular';
+     * });
+     * ```
+     */
+    const EVENT_SET_TRANSACTION_REFERENCE = 'setTransactionReference';
+
     // Properties
     // =========================================================================
 
@@ -187,13 +219,38 @@ class Flo2CashWeb2Pay extends OffsiteGateway
     }
 
     /**
+     * Triggers events to set request transaction particular and reference
+     * @inheritdoc
+     */
+    protected function createPaymentRequest(Transaction $transaction, $card = null, $itemBag = null): array
+    {
+        $request = parent::createPaymentRequest($transaction, $card, $itemBag);
+
+        $eventSetTransactionParticular = new SetTransactionParticular([
+            'transaction' => $transaction
+        ]);
+        $this->trigger(self::EVENT_SET_TRANSACTION_PARTICULAR, $eventSetTransactionParticular);
+
+        $eventSetTransactionReference = new SetTransactionReference([
+            'transaction' => $transaction
+        ]);
+        $this->trigger(self::EVENT_SET_TRANSACTION_REFERENCE, $eventSetTransactionReference);
+
+        // Set request properties
+        $request['transactionParticular'] = $eventSetTransactionParticular->particular ?? '';
+        $request['transactionReference'] = $eventSetTransactionReference->reference ?? $request['transactionReference'];
+
+        return $request;
+    }
+
+    /**
      * @inheritdoc
      */
     public function populateRequest(array &$request, BasePaymentForm $paymentForm = null)
     {
         $craftRequest = Craft::$app->getRequest();
 
-        $this->gateway()->setParticular($request['transactionId']);
+        $this->gateway()->setParticular($request['transactionParticular']);
         $this->gateway()->setReference($request['transactionReference']);
 
         // Populate parameters that come back from Flo2Cash via POST
